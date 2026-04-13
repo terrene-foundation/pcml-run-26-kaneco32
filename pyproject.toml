@@ -1,0 +1,144 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mlfp"
+version = "0.1.0"
+description = "ML Foundations for Professionals — Terrene Open Academy course powered by the Kailash Python SDK"
+requires-python = ">=3.13"
+license = "Apache-2.0"
+authors = [
+    { name = "Terrene Foundation" },
+]
+readme = "README.md"
+keywords = ["machine-learning", "kailash", "course", "training", "polars", "ml-foundations"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Education",
+]
+dependencies = [
+    # Kailash platform — pinned to versions verified working in M1-M5 fresh-venv tests
+    "kailash>=2.8.4",
+    "kailash-ml>=0.9.0",
+    "kailash-dataflow>=2.0.6",
+    "kailash-nexus>=2.0.1",
+    "kailash-kaizen>=2.7.3",
+    "kaizen-agents>=0.9.2",
+    "kailash-pact>=0.8.1",
+    "kailash-align>=0.3.1",
+    "kailash-mcp>=0.2.1",
+    # Data
+    "polars>=1.0",
+    "pyarrow>=14.0",
+    # Scientific computing
+    "numpy>=1.26",
+    "scipy>=1.12",
+    "scikit-learn>=1.4",
+    # Classical ML — used by M3 model zoo and gradient boosting
+    "xgboost>=2.0",
+    "lightgbm>=4.0",
+    "catboost>=1.2",
+    "imbalanced-learn>=0.12",
+    "shap>=0.45",
+    # Deep learning — required by M5 (autoencoders, CNN, RNN, transformer, GAN, GNN, RL)
+    "torch>=2.2",
+    "torchvision>=0.17",
+    "pytorch-lightning>=2.2",
+    "gymnasium[box2d]>=0.29",
+    "torch-geometric>=2.5",
+    # Real-world datasets — M5 exercises hit real data, not toys
+    "yfinance>=0.2.40",
+    "datasets>=3.0",
+    # Association rules — used by M4.5 market basket
+    "mlxtend>=0.23",
+    # Visualization
+    "plotly>=5.18",
+    # Data loading from Google Drive
+    "gdown>=5.0",
+    # Environment
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+notebooks = [
+    "jupyter>=1.0",
+    "nbformat>=5.9",
+    "ipywidgets>=8.0",
+]
+dl = [
+    "kailash-ml[dl]",
+]
+rl = [
+    "kailash-ml[rl]",
+]
+agents = [
+    "kailash-ml[agents]",
+]
+full = [
+    "kailash-ml[all]",
+    "jupyter>=1.0",
+    "nbformat>=5.9",
+    "ipywidgets>=8.0",
+]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+    "mypy>=1.10",
+    "nbval>=0.11",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["shared"]
+
+[tool.uv]
+# Universal resolution backtracks llvmlite/numba to Python-3.9-era versions
+# because shap caps them on darwin-x86_64 (`llvmlite<0.46`, `numba<0.63`).
+# The course targets arm64 macOS / Linux and requires Python >=3.13, so we
+# override the caps to force modern releases with Py3.13 wheels.
+override-dependencies = [
+    "llvmlite>=0.44",
+    "numba>=0.61",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.pyright]
+# Tell Pyright/Pylance to use the project .venv so kailash, kailash_ml, etc.
+# resolve correctly. Without this, VSCode's Pylance falls back to system
+# Python and shows spurious "Import could not be resolved" errors on every
+# kailash_* import in the course materials.
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.12"
+pythonPlatform = "Darwin"
+include = ["modules", "shared", "scripts", "tests"]
+exclude = [
+    "**/__pycache__",
+    "**/.venv",
+    "**/node_modules",
+    "**/.test_venv",
+    "**/.data_cache",
+]
+# Course material is teaching code, not production SDK — relax the strictness
+# so harmless polars/torch type-narrowing warnings don't drown the real signal.
+reportMissingImports = "warning"
+reportArgumentType = "warning"
+reportCallIssue = "warning"
+reportGeneralTypeIssues = "warning"
+reportOptionalMemberAccess = "warning"
